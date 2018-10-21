@@ -36,6 +36,24 @@ struct ComboAnalysis{
 		int four;
 		bool straight;
 		bool joker;
+		bool equal(int _1, int _2, int _3, int _4) const{
+			return single==_1 && pair==_2 && three==_3 && four==_4;
+		}
+		bool more(int _1, int _2, int _3, int _4) const{
+			return (_1==0? single==_1:single>=_1)
+				&& (_2==0? pair==_2:pair>=_2)
+				&& (_3==0? three==_3:three>=_3)
+				&& (_4==0? four==_4:four>=_4);
+		}
+		bool less(int _1, int _2, int _3, int _4) const{
+			return single<=_1 && pair<=_2 && three<=_3 && four<=_4;
+		}
+		bool attach() const{
+			return straight && (three==single || three==pair);
+		}
+		bool unattach() const{
+			return straight && (single+pair)==0;
+		}
 	};
 	int count;
 	int unequal;
@@ -45,10 +63,10 @@ struct ComboAnalysis{
 };
 
 void sort(byte* arr, int len);
-void shuffle(byte* const arr, int len);
+void shuffle(byte* arr, int len);
 byte get_value(byte card);
-int get_type(byte* const arr, int len,const ComboAnalysis result);
+int get_type(const ComboAnalysis* result);
 bool contains_value(byte one,byte arr[],int len);
-void analyse_combo(byte* const arr, int len, ComboAnalysis& analy);
-bool is_straight(byte* const arr, int len);
+void analyse_combo(const byte* arr, int len, ComboAnalysis& analy);
+bool is_straight(const byte* arr, int len);
 #endif

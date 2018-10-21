@@ -26,15 +26,15 @@ int main(int argc,char** argv){
     }
     DEBUG("\n");
   }
+  ComboAnalysis analy;
   char input[128];
   while(1){
     memset(input,0,sizeof(input));
-    scanf("%s",&input);
+    scanf("%s",input);
     sort((byte*)input, strlen(input));
 
-    ComboAnalysis analy;
     analyse_combo((byte*)input, strlen(input), analy);
-    int type=get_type((byte*)input, strlen(input), analy);
+    int type=get_type(&analy);
     DEBUG("single:%d,pair:%d,three:%d,four:%d,straight:%d\n",
       analy.combo.single,analy.combo.pair,analy.combo.three,analy.combo.four,analy.combo.straight);
     DEBUG("input:%d,max:%d,min:%d,dif:%d,type:%d\n", 

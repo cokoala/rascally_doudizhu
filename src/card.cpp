@@ -10,19 +10,16 @@ void shuffle(byte* arr,int len){
 	}
 }
 
-bool is_straight(byte* arr, int len){
+bool is_straight(const byte* arr, int len){
 	bool result=false;
-	int i=len-1;
-	do{
-		if(i<1)break;
-		result=(get_value(arr[i])-get_value(arr[i-1]))==1;
-		--i;
-	}while(result);
-
+	for(int i=len-1; i>0; --i){
+		result=abs(get_value(arr[i])-get_value(arr[i-1])) == 1;
+		if(!result)break;
+	}
 	return result;
 }
 
-void analyse_combo(byte* arr,int len, ComboAnalysis& analy){
+void analyse_combo(const byte* arr,int len, ComboAnalysis& analy){
 	ComboAnalysis::Counter counter[len];int counter_len=0;
 	for(int i=0,j=0; i<len; ++i){
 		do{
@@ -82,41 +79,49 @@ len min	max	dif
 10	2	3	4	aaabbbccdd
 */
 
-bool match_analyse(ComboAnalysis result, int count, int min, int max, int unequal,bool straight){
-	return result.count==count 
-		&& result.equal_min==min 
-		&& result.equal_max==max 
-		&& result.unequal==unequal 
-		&& result.combo.straight==straight;
-}
+// bool match_analyse(ComboAnalysis result, int count, int min, int max, int unequal,bool straight){
+// 	return result.count==count 
+// 		&& result.equal_min==min 
+// 		&& result.equal_max==max 
+// 		&& result.unequal==unequal 
+// 		&& result.combo.straight==straight;
+// }
 
-int get_type(byte* arr, int len, const ComboAnalysis result){
-	if(len==0)return CardType_Check;
-	if(match_analyse(result,1,1,1,1,false))return CardType_Single;
-	if(match_analyse(result,2,2,2,1,false))return CardType_Pair;
-	if(match_analyse(result,2,1,1,2,false))return CardType_Rocket;
-	if(match_analyse(result,3,3,3,1,false))return CardType_Three;
-	if(match_analyse(result,4,1,3,2,false))return CardType_Three_Attach_Single;
-	if(match_analyse(result,4,4,4,1,false))return CardType_Bomb;
-	if(match_analyse(result,5,1,1,5,true))return CardType_Straight;
-	if(match_analyse(result,5,2,3,2,false))return CardType_Three_Attach_Pair;
-	if(match_analyse(result,6,1,4,3,false))return CardType_Four_Attach_Single;
-	if(match_analyse(result,6,2,2,3,true))return CardType_Straight_Pair;
-	if(match_analyse(result,6,3,3,2,true))return CardType_Straight_Three;
-	if(match_analyse(result,8,2,4,3,false))return CardType_Four_Attach_Pair;
-	if(match_analyse(result,8,1,3,4,true))return CardType_Straight_Three_Attach_Single;
-	if(match_analyse(result,10,2,3,4,true))return CardType_Straight_Three_Attach_Pair;
-	return CardType_Check;
-}
+// int get_type(const byte* arr, int len, const ComboAnalysis result){
+// 	if(len==0)return CardType_Check;
+// 	if(match_analyse(result,1,1,1,1,false))return CardType_Single;
+// 	if(match_analyse(result,2,2,2,1,false))return CardType_Pair;
+// 	if(match_analyse(result,2,1,1,2,false))return CardType_Rocket;
+// 	if(match_analyse(result,3,3,3,1,false))return CardType_Three;
+// 	if(match_analyse(result,4,1,3,2,false))return CardType_Three_Attach_Single;
+// 	if(match_analyse(result,4,4,4,1,false))return CardType_Bomb;
+// 	if(match_analyse(result,5,1,1,5,true))return CardType_Straight;
+// 	if(match_analyse(result,5,2,3,2,false))return CardType_Three_Attach_Pair;
+// 	if(match_analyse(result,6,1,4,3,false))return CardType_Four_Attach_Single;
+// 	if(match_analyse(result,6,2,2,3,true))return CardType_Straight_Pair;
+// 	if(match_analyse(result,6,3,3,2,true))return CardType_Straight_Three;
+// 	if(match_analyse(result,8,2,4,3,false))return CardType_Four_Attach_Pair;
+// 	if(match_analyse(result,8,1,3,4,true))return CardType_Straight_Three_Attach_Single;
+// 	if(match_analyse(result,10,2,3,4,true))return CardType_Straight_Three_Attach_Pair;
+// 	return CardType_Check;
+// }
 
-void match_type(int single, int pair, int three, int four);
 
-int _get_type(const ComboAnalysis* analy){
+int get_type(const ComboAnalysis* analy){
 	if(analy->count==0)return CardType_Check;
-	if(analy->count==1)return CardType_Single;
-	if(analy->count==2){
-		if(analy->equal_max==2)return CardType_Pair;
-	}
+	if(analy->combo.equal(1,0,0,0))return CardType_Single;
+	if(analy->combo.equal(0,1,0,0))return CardType_Pair;
+	if(analy->combo.equal(0,0,1,0))return CardType_Three;
+	if(analy->combo.equal(1,0,1,0))return CardType_Three_Attach_Single;
+	if(analy->combo.equal(0,1,1,0))return CardType_Three_Attach_Pair;
+	if(analy->combo.equal(0,0,0,1))return CardType_Bomb;
+	if(analy->combo.equal(2,0,0,1))return CardType_Four_Attach_Single;
+	if(analy->combo.equal(0,2,0,1))return CardType_Four_Attach_Pair;
+	if(analy->combo.more(5,0,0,0) && analy->combo.straight)return CardType_Straight;
+	if(analy->combo.more(0,3,0,0) && analy->combo.straight)return CardType_Straight_Pair;
+	if(analy->combo.more(0,0,2,0) && analy->combo.straight)return CardType_Straight_Three;
+	if(analy->combo.more(2,0,2,0) && analy->combo.attach())return CardType_Straight_Three_Attach_Single;
+	if(analy->combo.more(0,2,2,0) && analy->combo.attach())return CardType_Straight_Three_Attach_Pair;
 	return CardType_Check;
 }
 
