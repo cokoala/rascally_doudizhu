@@ -19,6 +19,14 @@ bool is_straight(const byte* arr, int len){
 	return result;
 }
 
+bool has_jokers(const byte* arr, int len){
+	int joker=0;
+	for(int i=0; i<len; ++i){
+		joker+=(arr[i]&0xF0)==0x40? 1:0;
+	}
+	return joker==2;
+}
+
 void analyse_combo(const byte* arr,int len, ComboAnalysis& analy){
 	ComboAnalysis::Counter counter[len];int counter_len=0;
 	for(int i=0,j=0; i<len; ++i){
@@ -58,6 +66,7 @@ void analyse_combo(const byte* arr,int len, ComboAnalysis& analy){
 	}
 	sort(tmp_arr, tmp_arr_len);
 	tmp_analy.combo.straight=is_straight(tmp_arr, tmp_arr_len);
+	tmp_analy.combo.jokers=has_jokers(arr, len);
 	memcpy(&analy, &tmp_analy, sizeof(ComboAnalysis));
 }
 
@@ -111,6 +120,7 @@ int get_type(const ComboAnalysis* analy){
 	if(analy->count==0)return CardType_Check;
 	if(analy->combo.equal(1,0,0,0))return CardType_Single;
 	if(analy->combo.equal(0,1,0,0))return CardType_Pair;
+	if(analy->combo.equal(2,0,0,0) && analy->combo.jokers)return CardType_Rocket;
 	if(analy->combo.equal(0,0,1,0))return CardType_Three;
 	if(analy->combo.equal(1,0,1,0))return CardType_Three_Attach_Single;
 	if(analy->combo.equal(0,1,1,0))return CardType_Three_Attach_Pair;
@@ -123,6 +133,76 @@ int get_type(const ComboAnalysis* analy){
 	if(analy->combo.more(2,0,2,0) && analy->combo.attach())return CardType_Straight_Three_Attach_Single;
 	if(analy->combo.more(0,2,2,0) && analy->combo.attach())return CardType_Straight_Three_Attach_Pair;
 	return CardType_Check;
+}
+
+void check_combo(const ComboAnalysis* analy, CardCombo& combo){
+	CardCombo tmp_combo={0,0,0,0,0};
+	do{
+		if(analy->count==0)break;
+		if(analy->combo.equal(1,0,0,0)){
+			tmp_combo.base_type=CardCombo::BaseType_Single;
+			break;
+		}
+		if(analy->combo.equal(0,1,0,0)){
+			tmp_combo.base_type=CardCombo::BaseType_Pair;
+			break;
+		}
+		if(analy->combo.equal(2,0,0,0) && analy->combo.jokers){
+			tmp_combo.base_type=CardCombo::BaseType_Rocket;
+			break;
+		}
+		if(analy->combo.equal(0,0,1,0)){
+			tmp_combo.base_type=CardCombo::BaseType_Three;
+			break;
+		}
+		if(analy->combo.equal(1,0,1,0)){
+			tmp_combo.base_type=CardCombo::BaseType_Three;
+			tmp_combo.attach_type=CardCombo::AttachType_Single;
+			break;
+		}
+		if(analy->combo.equal(0,1,1,0)){
+			tmp_combo.base_type=CardCombo::BaseType_Three;
+			tmp_combo.attach_type=CardCombo::AttachType_Pair;
+			break;
+		}
+		if(analy->combo.equal(2,0,0,1)){
+			tmp_combo.base_type=CardCombo::BaseType_Four;
+			tmp_combo.attach_type=CardCombo::AttachType_Single;
+			break;
+		}
+		if(analy->combo.equal(0,2,0,1)){
+			tmp_combo.base_type=CardCombo::BaseType_Four;
+			tmp_combo.attach_type=CardCombo::AttachType_Pair;
+			break;
+		}
+		if(analy->combo.more(5,0,0,0) && analy->combo.straight){
+			tmp_combo.base_type=CardCombo::BaseType_Straight;
+			break;
+		}
+		if(analy->combo.more(0,3,0,0) && analy->combo.straight){
+			tmp_combo.base_type=CardCombo::BaseType_Straight;
+			tmp_combo.straight_type=CardCombo::StraightType_Pair;
+			break;
+		}
+		if(analy->combo.more(0,0,2,0) && analy->combo.straight){
+			tmp_combo.base_type=CardCombo::BaseType_Straight;
+			tmp_combo.straight_type=CardCombo::StraightType_Three;
+			break;
+		}
+		if(analy->combo.more(2,0,2,0) && analy->combo.attach()){
+			tmp_combo.base_type=CardCombo::BaseType_Straight;
+			tmp_combo.straight_type=CardCombo::StraightType_Three;
+			tmp_combo.attach_type=CardCombo::AttachType_Single;
+			break;
+		}
+		if(analy->combo.more(0,2,2,0) && analy->combo.attach()){
+			tmp_combo.base_type=CardCombo::BaseType_Straight;
+			tmp_combo.straight_type=CardCombo::StraightType_Three;
+			tmp_combo.attach_type=CardCombo::AttachType_Pair;
+			break;
+		}
+	}while(0);
+	memcpy(&combo, &tmp_combo, sizeof(combo));
 }
 
 

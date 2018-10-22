@@ -17,12 +17,48 @@ enum CardType{
 	CardType_Straight_Three=10,//111,222
 	CardType_Straight_Three_Attach_Single=11,//111,222,3,4
 	CardType_Straight_Three_Attach_Pair=12,//111,222,33,44
-	CardType_Bomb_Fake=13,//111,@
 	CardType_Bomb=14,//1111
 	CardType_Bomb_Super=15,//@@@@
 	CardType_TNT=16,
 	CardType_Rocket=17,//NM
 };
+
+struct CardCombo{
+	enum BaseType{
+		BaseType_Check=0,
+		BaseType_Single=1,
+		BaseType_Pair=2,
+		BaseType_Three=3,
+		BaseType_Four=4,
+		BaseType_Straight=5,
+		BaseType_Bomb=6,
+		BaseType_Rocket=7,
+	};
+	enum StraightType{
+		StraightType_Null=0,
+		StraightType_Single=1,
+		StraightType_Pair=2,
+		StraightType_Three=3,
+	};
+
+	enum AttachType{
+		AttachType_Null=0,
+		AttachType_Single=1,
+		AttachType_Pair=2,
+	};
+	enum BombType{
+		BombType_Fake=0,
+		BombType_Normal=1,
+		TypeType_Super=2,
+	};
+	int base_type;
+	int straight_type;
+	int attach_type;
+	int bomb_type;
+	//the count of straight or bomb;
+	int counter;
+};
+
 
 struct ComboAnalysis{
 	struct Counter{
@@ -35,7 +71,7 @@ struct ComboAnalysis{
 		int three;
 		int four;
 		bool straight;
-		bool joker;
+		bool jokers;
 		bool equal(int _1, int _2, int _3, int _4) const{
 			return single==_1 && pair==_2 && three==_3 && four==_4;
 		}
@@ -68,5 +104,7 @@ byte get_value(byte card);
 int get_type(const ComboAnalysis* result);
 bool contains_value(byte one,byte arr[],int len);
 void analyse_combo(const byte* arr, int len, ComboAnalysis& analy);
+void check_combo(const ComboAnalysis* analy,CardCombo& combo);
 bool is_straight(const byte* arr, int len);
+bool has_jokers(const byte* arr, int len);
 #endif

@@ -1,7 +1,6 @@
 EXE:=game
 
 CXX= g++
-AR= ar
 
 CXXFLAGS+= -std=c++98 -Wall -Wformat
 INC+= -I./src

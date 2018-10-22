@@ -104,6 +104,12 @@ void test_3322(){
 	DEBUGPRO("%s\n",pass? "succeed!":"failed!");
 }
 
+void test_NM(){
+	byte arr[2]={0x4E,0x4F};
+	bool pass=test(arr, 2, CardType_Rocket);
+	DEBUGPRO("%s\n",pass? "succeed!":"failed!");
+}
+
 
 int main(void){
 	test_1();
@@ -121,5 +127,6 @@ int main(void){
 	test_33();
 	test_3311();
 	test_3322();
+	test_NM();
 	return 0;
 }
