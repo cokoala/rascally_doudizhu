@@ -13,8 +13,8 @@ int main(int argc,char** argv){
       players[p].cards[i]=cards[count++];
     }
   }
-
-  int val=get_value(cards[rand()%52])-1;
+  byte super_card=cards[rand()%52];
+  int val=get_value(super_card)-1;
   DEBUG("super card:%c\n",Card_Labels[val]);
   
   for(int p=0; p<3; ++p){
@@ -33,7 +33,7 @@ int main(int argc,char** argv){
     scanf("%s",input);
     sort((byte*)input, strlen(input));
 
-    analyse_combo((byte*)input, strlen(input), analy);
+    analyse_combo((byte*)input, strlen(input), &super_card, 1, analy);
     int type=get_type(&analy);
     DEBUG("single:%d,pair:%d,three:%d,four:%d,straight:%d\n",
       analy.combo.single,analy.combo.pair,analy.combo.three,analy.combo.four,analy.combo.straight);

@@ -4,7 +4,7 @@
 bool test(byte* arr, int len, int type){
 	ComboAnalysis analy;
 	sort(arr, len);
-	analyse_combo(arr, len, analy);
+	analyse_combo(arr, len, NULL, 0, analy);
 	return type==get_type(&analy);
 }
 

@@ -10,6 +10,16 @@ void shuffle(byte* arr,int len){
 	}
 }
 
+bool has_supercard(const byte* arr, int len, const byte* super, int super_len){
+	for(int i=0;i<super_len;++i){
+		for(int j=0;j<len;++j){
+			if(get_value(super[i]) == get_value(arr[j]))
+				return true;
+		}
+	}
+	return false;
+}
+
 bool is_straight(const byte* arr, int len){
 	bool result=false;
 	for(int i=len-1; i>0; --i){
@@ -46,6 +56,61 @@ void analyse_combo(const byte* arr,int len, ComboAnalysis& analy){
 		j=0;
 	}
 	ComboAnalysis tmp_analy={0,0,0,0,{0,0,0,0,false}};
+	tmp_analy.count=len;
+	tmp_analy.unequal=counter_len;
+	tmp_analy.equal_max=len>0? 1:0;
+	tmp_analy.equal_min=len;
+	for(int i=0; i<counter_len; ++i){
+		if(counter[i].num==1)tmp_analy.combo.single++;
+		if(counter[i].num==2)tmp_analy.combo.pair++;
+		if(counter[i].num==3)tmp_analy.combo.three++;
+		if(counter[i].num==4)tmp_analy.combo.four++;
+		tmp_analy.equal_max=counter[i].num>=tmp_analy.equal_max? counter[i].num:tmp_analy.equal_max;
+		tmp_analy.equal_min=counter[i].num<=tmp_analy.equal_min? counter[i].num:tmp_analy.equal_min;
+	}
+	byte tmp_arr[len];int tmp_arr_len=0;
+	for(int i=0; i<len; ++i){
+		if(counter[i].num == tmp_analy.equal_max){
+			tmp_arr[tmp_arr_len++]=counter[i].val;
+		}
+	}
+	sort(tmp_arr, tmp_arr_len);
+	tmp_analy.combo.straight=is_straight(tmp_arr, tmp_arr_len);
+	tmp_analy.combo.jokers=has_jokers(arr, len);
+	memcpy(&analy, &tmp_analy, sizeof(ComboAnalysis));
+}
+
+bool arr_contains(byte one, const byte* arr, int len){
+	for(int i=0;i<len;++i){
+		if(get_value(one) == arr[i])
+			return true;
+	}
+	return false;
+}	
+
+void analyse_combo(const byte* arr,int len, const byte* super, int super_len, ComboAnalysis& analy){
+	ComboAnalysis::Counter counter[len];int counter_len=0;
+	ComboAnalysis tmp_analy={0,0,0,0,{0,0,0,0,false}};
+	for(int i=0,j=0; i<len; ++i){
+		do{
+			if(arr_contains(arr[i], super, super_len)){
+				tmp_analy.combo.super++;
+				break;
+			}
+			if(j>=counter_len){
+				counter[j].val=arr[i];
+				counter[j].num=1;
+				++counter_len;
+				break;
+			}
+			if((arr[i]&0x0F) == (counter[j].val&0x0F)){
+				++counter[j].num;
+				break;
+			}
+			++j;
+		}while(1);
+		j=0;
+	}
 	tmp_analy.count=len;
 	tmp_analy.unequal=counter_len;
 	tmp_analy.equal_max=len>0? 1:0;
@@ -116,6 +181,10 @@ len min	max	dif
 // }
 
 
+void upgrade(ComboAnalysis* analy){
+	
+}
+
 int get_type(const ComboAnalysis* analy){
 	if(analy->count==0)return CardType_Check;
 	if(analy->combo.equal(1,0,0,0))return CardType_Single;
@@ -130,13 +199,13 @@ int get_type(const ComboAnalysis* analy){
 	if(analy->combo.more(5,0,0,0) && analy->combo.straight)return CardType_Straight;
 	if(analy->combo.more(0,3,0,0) && analy->combo.straight)return CardType_Straight_Pair;
 	if(analy->combo.more(0,0,2,0) && analy->combo.straight)return CardType_Straight_Three;
-	if(analy->combo.more(2,0,2,0) && analy->combo.attach())return CardType_Straight_Three_Attach_Single;
-	if(analy->combo.more(0,2,2,0) && analy->combo.attach())return CardType_Straight_Three_Attach_Pair;
+	if(analy->combo.more(2,0,2,0) && analy->combo.straight && analy->combo.attach())return CardType_Straight_Three_Attach_Single;
+	if(analy->combo.more(0,2,2,0) && analy->combo.straight && analy->combo.attach())return CardType_Straight_Three_Attach_Pair;
 	return CardType_Check;
 }
 
 void check_combo(const ComboAnalysis* analy, CardCombo& combo){
-	CardCombo tmp_combo={0,0,0,0,0};
+	CardCombo tmp_combo={0,0,0,0,0,0};
 	do{
 		if(analy->count==0)break;
 		if(analy->combo.equal(1,0,0,0)){
@@ -189,13 +258,13 @@ void check_combo(const ComboAnalysis* analy, CardCombo& combo){
 			tmp_combo.straight_type=CardCombo::StraightType_Three;
 			break;
 		}
-		if(analy->combo.more(2,0,2,0) && analy->combo.attach()){
+		if(analy->combo.more(2,0,2,0) && analy->combo.straight && analy->combo.attach()){
 			tmp_combo.base_type=CardCombo::BaseType_Straight;
 			tmp_combo.straight_type=CardCombo::StraightType_Three;
 			tmp_combo.attach_type=CardCombo::AttachType_Single;
 			break;
 		}
-		if(analy->combo.more(0,2,2,0) && analy->combo.attach()){
+		if(analy->combo.more(0,2,2,0) && analy->combo.straight && analy->combo.attach()){
 			tmp_combo.base_type=CardCombo::BaseType_Straight;
 			tmp_combo.straight_type=CardCombo::StraightType_Three;
 			tmp_combo.attach_type=CardCombo::AttachType_Pair;

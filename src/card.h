@@ -29,8 +29,8 @@ struct CardCombo{
 		BaseType_Single=1,
 		BaseType_Pair=2,
 		BaseType_Three=3,
-		BaseType_Four=4,
-		BaseType_Straight=5,
+		BaseType_Straight=4,
+		BaseType_Four=5,
 		BaseType_Bomb=6,
 		BaseType_Rocket=7,
 	};
@@ -55,8 +55,9 @@ struct CardCombo{
 	int straight_type;
 	int attach_type;
 	int bomb_type;
-	//the count of straight or bomb;
+	//the count of straight, pair, three or bomb;
 	int counter;
+	int value;
 };
 
 
@@ -70,6 +71,7 @@ struct ComboAnalysis{
 		int pair;
 		int three;
 		int four;
+		int super;
 		bool straight;
 		bool jokers;
 		bool equal(int _1, int _2, int _3, int _4) const{
@@ -85,10 +87,10 @@ struct ComboAnalysis{
 			return single<=_1 && pair<=_2 && three<=_3 && four<=_4;
 		}
 		bool attach() const{
-			return straight && (three==single || three==pair);
+			return three==single || three==pair;
 		}
 		bool unattach() const{
-			return straight && (single+pair)==0;
+			return (single+pair)==0;
 		}
 	};
 	int count;
@@ -103,7 +105,8 @@ void shuffle(byte* arr, int len);
 byte get_value(byte card);
 int get_type(const ComboAnalysis* result);
 bool contains_value(byte one,byte arr[],int len);
-void analyse_combo(const byte* arr, int len, ComboAnalysis& analy);
+void analyse_combo(const byte* arr,int len, ComboAnalysis& analy);
+void analyse_combo(const byte* arr, int len,const byte* super, int super_len, ComboAnalysis& analy);
 void check_combo(const ComboAnalysis* analy,CardCombo& combo);
 bool is_straight(const byte* arr, int len);
 bool has_jokers(const byte* arr, int len);
